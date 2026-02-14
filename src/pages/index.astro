@@ -1,0 +1,24 @@
+---
+import Card from "../components/Card.svelte";
+import Rain from "../components/Rain.svelte";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+    <!-- Background image -->
+    <div
+        class="fixed inset-0 -z-20 bg-cover bg-center blur-2xl scale-110 brightness-50"
+        style="background-image: url('/bg.png');"
+    >
+    </div>
+
+    <!-- Rain animation -->
+    <Rain client:idle />
+
+    <!-- Main content -->
+    <main
+        class="relative z-10 flex items-center justify-center min-h-screen p-4"
+    >
+        <Card client:load />
+    </main>
+</Layout>

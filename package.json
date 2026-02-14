@@ -1,0 +1,24 @@
+{
+    "name": "personal-website",
+    "type": "module",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "astro": "astro"
+    },
+    "dependencies": {
+        "@astrojs/svelte": "^7.2.5",
+        "astro": "^5.17.1",
+        "svelte": "^5.51.0",
+        "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.3.15",
+        "@iconify-json/lucide": "^1.2.90",
+        "@iconify-json/simple-icons": "^1.2.70",
+        "@unocss/astro": "^66.6.0",
+        "unocss": "^66.6.0"
+    }
+}

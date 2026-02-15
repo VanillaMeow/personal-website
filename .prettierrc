@@ -1,5 +1,15 @@
 {
   "tabWidth": 4,
   "useTabs": false,
-  "singleQuote": true
+  "singleQuote": true,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "printWidth": 128,
+  "trailingComma": "all",
+  "jsxSingleQuote": true,
+  "objectWrap": "preserve",
+  "svelteStrictMode": true,
+  "svelteBracketNewLine": true,
+  "plugins": ["prettier-plugin-svelte"]
+
 }

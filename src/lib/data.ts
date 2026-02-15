@@ -22,6 +22,7 @@ export interface Repo {
     language?: string;
 }
 
+export const NAME = 'leah';
 export const BIO = 'eepy catgirl';
 
 export const TABS: Tab[] = [
@@ -29,14 +30,13 @@ export const TABS: Tab[] = [
         key: 'home',
         label: 'home',
         maxWidth: 'max-w-md',
-        panelMaxWidth: 'max-w-sm',
         transition: { x: -75 },
     },
     {
         key: 'portfolio',
         label: 'repos',
         maxWidth: 'max-w-4xl',
-        transition: { y: 75 },
+        transition: { y: 150 },
     },
 ] as const;
 

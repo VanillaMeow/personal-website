@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { rainState } from '../../lib/sharedState.svelte';
+
     let canvas: HTMLCanvasElement;
 
     interface Raindrop {
@@ -9,31 +11,39 @@
         bucket: number;
     }
 
-    const DROP_COUNT = 2500;
     const DROP_RATE = 5;
     const OPACITY_BUCKETS = [0.1, 0.2, 0.3, 0.4];
 
     $effect(() => {
         const maybeCtx = canvas.getContext('2d');
-        if (!maybeCtx) return;
+        if (!maybeCtx) {
+            return;
+        }
         const ctx = maybeCtx;
 
+        let dpr = window.devicePixelRatio || 1;
         let width = window.innerWidth;
         let height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.scale(dpr, dpr);
 
         const bucketStyles = OPACITY_BUCKETS.map(
             (o) => `rgba(174, 194, 224, ${o})`,
         );
 
-        const drops: Raindrop[] = Array.from({ length: DROP_COUNT }, () => ({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            length: 15 + Math.random() * 25,
-            speed: DROP_RATE + Math.random() * DROP_RATE * 2,
-            bucket: Math.floor(Math.random() * OPACITY_BUCKETS.length),
-        }));
+        const drops: Raindrop[] = Array.from(
+            { length: rainState.dropCount },
+            () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                length: 15 + Math.random() * 25,
+                speed: DROP_RATE + Math.random() * DROP_RATE * 2,
+                bucket: Math.floor(Math.random() * OPACITY_BUCKETS.length),
+            }),
+        );
 
         // Pre-sort so contiguous runs share the same stroke style
         drops.sort((a, b) => a.bucket - b.bucket);
@@ -75,10 +85,14 @@
         draw();
 
         const onResize = () => {
+            dpr = window.devicePixelRatio || 1;
             width = window.innerWidth;
             height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         };
         window.addEventListener('resize', onResize);
 
@@ -89,5 +103,8 @@
     });
 </script>
 
-<canvas bind:this={canvas} class="fixed inset-0 z-0 pointer-events-none"
+<canvas
+    bind:this={canvas}
+    class="fixed inset-0 z-0 pointer-events-none"
+    aria-hidden="true"
 ></canvas>

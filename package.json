@@ -19,6 +19,8 @@
         "@iconify-json/lucide": "^1.2.90",
         "@iconify-json/simple-icons": "^1.2.70",
         "@unocss/astro": "^66.6.0",
+        "prettier": "^3.8.1",
+        "prettier-plugin-svelte": "^3.4.1",
         "unocss": "^66.6.0"
     }
 }

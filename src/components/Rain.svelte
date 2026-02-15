@@ -6,10 +6,12 @@
         y: number;
         length: number;
         speed: number;
-        opacity: number;
+        bucket: number;
     }
 
-    const DROP_COUNT = 200;
+    const DROP_COUNT = 2500;
+    const DROP_RATE = 5;
+    const OPACITY_BUCKETS = [0.1, 0.2, 0.3, 0.4];
 
     $effect(() => {
         const maybeCtx = canvas.getContext('2d');
@@ -21,33 +23,52 @@
         canvas.width = width;
         canvas.height = height;
 
+        const bucketStyles = OPACITY_BUCKETS.map(
+            (o) => `rgba(174, 194, 224, ${o})`,
+        );
+
         const drops: Raindrop[] = Array.from({ length: DROP_COUNT }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
             length: 15 + Math.random() * 25,
-            speed: 4 + Math.random() * 8,
-            opacity: 0.1 + Math.random() * 0.3,
+            speed: DROP_RATE + Math.random() * DROP_RATE * 2,
+            bucket: Math.floor(Math.random() * OPACITY_BUCKETS.length),
         }));
+
+        // Pre-sort so contiguous runs share the same stroke style
+        drops.sort((a, b) => a.bucket - b.bucket);
 
         let animationId: number;
 
         function draw() {
             ctx.clearRect(0, 0, width, height);
+            ctx.lineWidth = 1;
+
+            let currentBucket = -1;
             for (const drop of drops) {
-                ctx.beginPath();
+                if (drop.bucket !== currentBucket) {
+                    if (currentBucket !== -1) {
+                        ctx.stroke();
+                    }
+
+                    currentBucket = drop.bucket;
+                    ctx.beginPath();
+                    ctx.strokeStyle = bucketStyles[currentBucket];
+                }
+
                 ctx.moveTo(drop.x, drop.y);
                 ctx.lineTo(drop.x, drop.y + drop.length);
-                ctx.strokeStyle = `rgba(174, 194, 224, ${drop.opacity})`;
-                ctx.lineWidth = 1;
-                ctx.stroke();
 
                 drop.y += drop.speed;
-
                 if (drop.y > height) {
                     drop.y = -drop.length;
                     drop.x = Math.random() * width;
                 }
             }
+            if (currentBucket !== -1) {
+                ctx.stroke();
+            }
+
             animationId = requestAnimationFrame(draw);
         }
 

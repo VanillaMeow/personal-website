@@ -18,7 +18,9 @@
                 she/her
                 <span class="text-base">🏳️‍⚧️</span>
             </p>
-            <p class="text-white/60 text-sm mt-2">{BIO}</p>
+            <div class="max-h-10em overflow-y-auto">
+                <p class="text-elipsis text-clip text-white/60 text-sm mt-2">{BIO}</p>
+            </div>
         </div>
     </div>
 

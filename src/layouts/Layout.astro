@@ -21,7 +21,15 @@ const { title = 'leah' } = Astro.props;
         />
         <title>{title}</title>
     </head>
-    <body class="min-h-screen bg-zinc-950 text-white overflow-hidden font-sans">
+
+    <body class="min-h-screen bg-zinc-950 text-white overflow-hidden font-sans scroll">
         <slot />
     </body>
 </html>
+
+<style is:global>
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    }
+</style>

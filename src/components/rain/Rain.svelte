@@ -11,8 +11,30 @@
         bucket: number;
     }
 
-    const DROP_RATE = 5;
+    const BASELINE_WIDTH = 1920;
+    const BASE_DROP_COUNT = rainState.dropCount;
+    const DROP_SPEED = 5;
     const OPACITY_BUCKETS = [0.1, 0.2, 0.3, 0.4];
+    const BUCKET_STYLES = OPACITY_BUCKETS.map((o) => `rgba(174, 194, 224, ${o})`);
+
+    function _getScaledDropCount(): number {
+        return Math.round(BASE_DROP_COUNT * (window.innerWidth / BASELINE_WIDTH));
+    }
+
+    function resizeCanvas(ctx: CanvasRenderingContext2D) {
+        const dpr = window.devicePixelRatio || 1;
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    rainState.dropCount = _getScaledDropCount();
+    let width: number;
+    let height: number;
 
     $effect(() => {
         const maybeCtx = canvas.getContext('2d');
@@ -21,29 +43,28 @@
         }
         const ctx = maybeCtx;
 
-        let dpr = window.devicePixelRatio || 1;
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.scale(dpr, dpr);
+        // Resize canvas on window resize
+        let resizeTimeout: ReturnType<typeof setTimeout>;
+        function onResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                resizeCanvas(ctx);
+                rainState.dropCount = _getScaledDropCount();
+            }, 25);
+        }
+        window.addEventListener('resize', onResize);
 
-        const bucketStyles = OPACITY_BUCKETS.map(
-            (o) => `rgba(174, 194, 224, ${o})`,
-        );
+        // Set initial canvas ctx
+        resizeCanvas(ctx);
+        ctx.lineWidth = 1;
 
-        const drops: Raindrop[] = Array.from(
-            { length: rainState.dropCount },
-            () => ({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                length: 15 + Math.random() * 25,
-                speed: DROP_RATE + Math.random() * DROP_RATE * 2,
-                bucket: Math.floor(Math.random() * OPACITY_BUCKETS.length),
-            }),
-        );
+        const drops: Raindrop[] = Array.from({ length: rainState.dropCount }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            length: 15 + Math.random() * 25,
+            speed: DROP_SPEED + Math.random() * DROP_SPEED * 2,
+            bucket: Math.floor(Math.random() * OPACITY_BUCKETS.length),
+        }));
 
         // Pre-sort so contiguous runs share the same stroke style
         drops.sort((a, b) => a.bucket - b.bucket);
@@ -52,7 +73,6 @@
 
         function draw() {
             ctx.clearRect(0, 0, width, height);
-            ctx.lineWidth = 1;
 
             let currentBucket = -1;
             for (const drop of drops) {
@@ -63,7 +83,7 @@
 
                     currentBucket = drop.bucket;
                     ctx.beginPath();
-                    ctx.strokeStyle = bucketStyles[currentBucket];
+                    ctx.strokeStyle = BUCKET_STYLES[currentBucket];
                 }
 
                 ctx.moveTo(drop.x, drop.y);
@@ -82,19 +102,8 @@
             animationId = requestAnimationFrame(draw);
         }
 
+        // Begin drawing rain
         draw();
-
-        const onResize = () => {
-            dpr = window.devicePixelRatio || 1;
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        };
-        window.addEventListener('resize', onResize);
 
         return () => {
             cancelAnimationFrame(animationId);
@@ -103,8 +112,4 @@
     });
 </script>
 
-<canvas
-    bind:this={canvas}
-    class="fixed inset-0 z-0 pointer-events-none"
-    aria-hidden="true"
-></canvas>
+<canvas bind:this={canvas} class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"></canvas>

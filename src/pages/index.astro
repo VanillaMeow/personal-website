@@ -1,25 +1,23 @@
 ---
-import Card from "../components/MainCard.svelte";
-import Rain from "../components/rain/Rain.svelte";
-import Layout from "../layouts/Layout.astro";
+import Card from '../components/MainCard.svelte';
+import Rain from '../components/rain/Rain.svelte';
+import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
     <!-- Background image -->
     <div
-        class="fixed inset-0 -z-20 bg-cover bg-center blur-12px scale-110 brightness-40"
+        class='fixed inset-0 -z-20 bg-cover bg-center blur-12px scale-110 brightness-40'
         style="background-image: url('/bg.png');"
-        aria-hidden="true"
+        aria-hidden='true'
     >
     </div>
 
     <!-- Rain animation -->
-    <Rain client:load />
+    <Rain client:load client:only='svelte' />
 
     <!-- Main content -->
-    <main
-        class="relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4"
-    >
+    <main class='relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4'>
         <Card client:load />
     </main>
 </Layout>

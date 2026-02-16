@@ -15,13 +15,6 @@ export interface Tab {
     transition: { x?: number; y?: number };
 }
 
-export interface Repo {
-    name: string;
-    description: string;
-    url: string;
-    language?: string;
-}
-
 export const NAME = 'leah';
 export const BIO = 'eepy catgirl';
 
@@ -55,77 +48,15 @@ export const SOCIALS: SocialLink[] = [
     },
 ] as const;
 
-export const REPOS: Repo[] = [
-    {
-        name: 'personal-website',
-        description: 'my personal website',
-        url: 'https://github.com/leah/personal-website',
-        language: 'TypeScript',
-    },
-    {
-        name: 'dotfiles',
-        description: 'system configuration files',
-        url: 'https://github.com/leah/dotfiles',
-        language: 'Shell',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-    {
-        name: 'project-three',
-        description: 'placeholder project',
-        url: 'https://github.com/leah/project-three',
-        language: 'Rust',
-    },
-] as const;
+export const GITHUB_OWNER = 'VanillaMeow';
+export const REPO_BASE = `https://github.com/${GITHUB_OWNER}/`;
+
+export const REPO_SLUGS: string[] = [
+    'personal-website',
+    'wf-market-checker',
+    'PinkCatBoo-Personal-Edit',
+    'Stylis-Fed',
+    'moist-bot',
+    'roblox-solidmodel-converter-opus-vibe',
+    'PF-Animation-EQs',
+];

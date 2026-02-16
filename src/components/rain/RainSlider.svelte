@@ -1,25 +1,36 @@
 <script lang="ts">
     import { rainState } from '../../lib/sharedState.svelte';
 
-    const LOG_MIN = Math.log(1);
-    const LOG_MAX = Math.log(100_000);
+    function clamp(v: number, min: number, max: number): number {
+        return Math.min(Math.max(v, min), max);
+    }
+
+    // Root curve: coarse near 0, fine-grained near max
+    const MAX = 100_000;
+    const EXP = 0.33;
 
     function sliderToCount(v: number): number {
-        if (v <= 0) return 0;
-        return Math.round(Math.exp(LOG_MIN + v * (LOG_MAX - LOG_MIN)));
+        v = clamp(v, 0, 1);
+        return Math.round(MAX * v ** (1 / EXP));
     }
 
     function countToSlider(c: number): number {
-        if (c <= 0) return 0;
-        return (Math.log(c) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+        c = clamp(c, 0, MAX);
+        return (c / MAX) ** EXP;
     }
 
     function formatCount(n: number): string {
-        if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+        if (n >= 1000) {
+            return `${(n / 1000).toFixed(1)}k`;
+        }
         return String(n);
     }
 
     let sliderValue = $state(countToSlider(rainState.dropCount));
+
+    function blurOnRelease(e: Event) {
+        (e.target as HTMLElement).blur();
+    }
 </script>
 
 <div class="rain-control group flex items-center gap-2">
@@ -34,6 +45,7 @@
             oninput={() => {
                 rainState.dropCount = sliderToCount(sliderValue);
             }}
+            onchange={blurOnRelease}
             class="rain-slider"
             aria-label="Rain drop count"
         />

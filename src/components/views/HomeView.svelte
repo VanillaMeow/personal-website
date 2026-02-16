@@ -16,9 +16,9 @@
         />
         <div>
             <h1 class="text-xl font-semibold">{NAME}</h1>
-            <p class="text-white/50 text-sm flex items-center gap-1.5">
+            <p class="text-white/50 text-sm flex items-center gap-2">
                 she/her
-                <span class="text-base">🏳️‍⚧️</span>
+                <span class="i-twemoji-transgender-flag scale-110"></span>
             </p>
             <div class="max-h-10em overflow-y-auto">
                 <p class="text-white/60 text-sm mt-2">{BIO}</p>
@@ -36,9 +36,9 @@
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="glass-link"
+                class="glass-link flex items-center gap-3"
                 in:fly|global={{
-                    y: 15,
+                    x: -25,
                     duration: 400,
                     delay: 400 + i * 100,
                     easing: cubicOut,

@@ -1,4 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+
+import bgImage from '../assets/bg.png';
 import Card from '../components/MainCard.svelte';
 import Rain from '../components/rain/Rain.svelte';
 import Layout from '../layouts/Layout.astro';
@@ -6,12 +9,17 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout>
     <!-- Background image -->
-    <div
-        class='fixed inset-0 -z-20 bg-cover bg-center blur-12px scale-110 brightness-40'
-        style="background-image: url('/bg.png');"
+    <Image
+        src={bgImage}
+        alt='Background image'
+        class='fixed inset-0 -z-20 w-full h-full object-cover object-center scale-110 blur-12px brightness-40'
+        width='1920'
+        height='1080'
+        loading='lazy'
+        decoding='async'
+        fetchpriority='high'
         aria-hidden='true'
-    >
-    </div>
+    />
 
     <!-- Rain animation -->
     <Rain client:load client:only='svelte' />

@@ -26,7 +26,7 @@
         return String(n);
     }
 
-    let sliderValue = $state(countToSlider(rainState.dropCount));
+    let sliderValue = $derived(countToSlider(rainState.dropCount));
 
     function blurOnRelease(e: Event) {
         (e.target as HTMLElement).blur();

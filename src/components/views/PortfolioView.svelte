@@ -3,8 +3,8 @@
 <script lang="ts">
     import { cubicOut } from 'svelte/easing';
     import { fly } from 'svelte/transition';
-    import { GITHUB_OWNER, REPO_BASE, REPO_SLUGS } from '../../lib/data';
-    import { fetchRepos, repoCache } from '../../lib/github.svelte';
+    import { REPO_SLUGS } from '../../lib/data';
+    import { repoCache } from '../../lib/github.svelte';
     import { REPO_CARD_TRANSITION_DELAY } from '../../lib/viewTransition.svelte';
 
     const LANG_ICONS: Record<string, string> = {
@@ -30,11 +30,13 @@
     };
 
     const FALLBACK_ICON = 'i-lucide-code';
-
-    $effect(() => {
-        fetchRepos(REPO_SLUGS, GITHUB_OWNER, REPO_BASE);
-    });
 </script>
+
+{#snippet descSkeleton()}
+    <div class="skeleton text-xs flex-1 h-3 w-9/10 rounded line-clamp-2 min-h-[1lh]"></div>
+    <div class="skeleton text-xs flex-1 h-3 w-3/5 rounded line-clamp-2 min-h-[1lh]"></div>
+    <div class="skeleton flex text-xs h-3 w-1/5 rounded mt-auto"></div>
+{/snippet}
 
 <div>
     <h2 class="text-sm font-medium text-white/80 mb-4 select-none">projects</h2>
@@ -59,7 +61,7 @@
                         <span class="text-sm font-medium text-white/90">{repo.name}</span>
                     </div>
                     {#if repo.loaded}
-                        <p class="text-xs text-white/50 flex-1 overflow-hidden text-ellipsis">
+                        <p class="text-xs text-white/50 flex-1 overflow-hidden line-clamp-2 min-h-[2lh]">
                             {repo.description ?? ''}
                         </p>
                         <span class="flex items-center gap-1.5 text-xs text-white/45 mt-auto">
@@ -67,8 +69,7 @@
                             {repo.language ?? 'Other'}
                         </span>
                     {:else}
-                        <div class="skeleton h-3 w-3/4 rounded"></div>
-                        <div class="skeleton h-3 w-1/5 rounded mt-auto"></div>
+                        {@render descSkeleton()}
                     {/if}
                 </a>
             {/if}

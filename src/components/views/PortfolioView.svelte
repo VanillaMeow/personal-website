@@ -23,6 +23,7 @@
         HTML: 'i-simple-icons-html5',
         CSS: 'i-simple-icons-css',
         Shell: 'i-simple-icons-gnubash',
+        Svelte: 'i-simple-icons-svelte',
         Ruby: 'i-simple-icons-ruby',
         Swift: 'i-simple-icons-swift',
         Kotlin: 'i-simple-icons-kotlin',

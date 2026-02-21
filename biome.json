@@ -7,7 +7,7 @@
     },
     "html": {
         "formatter": {
-            "enabled": true
+            "enabled": false
         },
         "experimentalFullSupportEnabled": true
     },
@@ -15,9 +15,7 @@
         "ignoreUnknown": false
     },
     "formatter": {
-        "enabled": true,
-        "indentStyle": "space",
-        "formatWithErrors": false
+        "enabled": false
     },
     "linter": {
         "enabled": true,

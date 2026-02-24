@@ -6,7 +6,7 @@
     }
 
     // Root curve: coarse near 0, fine-grained near max
-    const MAX = 100_000;
+    const MAX = 1_000_000;
     const EXP = 0.33;
 
     function sliderToCount(v: number): number {

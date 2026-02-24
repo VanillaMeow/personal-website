@@ -1,123 +1,75 @@
 <script lang="ts">
     import { rainState } from '../../lib/sharedState.svelte';
+    import type { ToWorkerMsg } from './types';
 
     let canvas: HTMLCanvasElement;
+    let workerRef: Worker | null = null;
 
-    interface Raindrop {
-        x: number;
-        y: number;
-        length: number;
-        speed: number;
-    }
-
-    const BASE_DROP_COUNT = rainState.dropCount;
-    const DROP_SPEED = 333;
-
-    const OPACITY_BUCKETS = [0.1, 0.2, 0.3, 0.4];
-    const BUCKET_STYLES = OPACITY_BUCKETS.map((o) => `rgba(174, 194, 224, ${o})`);
-
+    const BASE_DROP_COUNT = 2500;
     const BASELINE_WIDTH = 1920;
-    function _getScaledDropCount(): number {
+    function getScaledDropCount(): number {
         return Math.round(BASE_DROP_COUNT * (window.innerWidth / BASELINE_WIDTH));
     }
 
-    function resizeCanvas(ctx: CanvasRenderingContext2D) {
-        const dpr = window.devicePixelRatio || 1;
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    rainState.dropCount = _getScaledDropCount();
-    let width: number;
-    let height: number;
-
+    // Effect 1: Worker lifecycle — runs once on mount.
+    // Effect 1 has no reactive reads, so a dropCount change never recreates the worker
+    // (which would break transferControlToOffscreen, which can only be called once per canvas).
     $effect(() => {
-        const maybeCtx = canvas.getContext('2d');
-        if (!maybeCtx) {
-            return;
-        }
-        const ctx = maybeCtx;
+        // Create worker
+        const worker = new Worker(new URL('./rainWorker.ts', import.meta.url), { type: 'module' });
+        workerRef = worker;
 
-        // Set initial canvas ctx
-        resizeCanvas(ctx);
-        ctx.lineWidth = 1;
+        // Init canvas
+        const offscreenCanvas = canvas.transferControlToOffscreen();
 
-        // Allocate drops
-        const DROPS: Raindrop[][] = Array.from({ length: OPACITY_BUCKETS.length }, () => []);
-        for (let i = 0; i < rainState.dropCount; i++) {
-            DROPS[i % OPACITY_BUCKETS.length].push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                length: 15 + Math.random() * 25,
-                speed: DROP_SPEED + Math.random() * DROP_SPEED * 2,
-            });
-        }
+        // Init drop count
+        rainState.dropCount = getScaledDropCount();
 
-        // Animation state
-        let animationId: number;
-        let lastTime = performance.now();
-        let deltaTime = 1;
+        // Init worker
+        worker.postMessage({ type: 'init', canvas: offscreenCanvas } satisfies ToWorkerMsg, [offscreenCanvas]);
+        worker.postMessage({
+            type: 'resize',
+            width: window.innerWidth,
+            height: window.innerHeight,
+            dpr: window.devicePixelRatio || 1,
+        } satisfies ToWorkerMsg);
 
-        // Main draw loop
-        function draw(currentTime: DOMHighResTimeStamp) {
-            deltaTime = (currentTime - lastTime) / 1000;
-            lastTime = currentTime;
-
-            ctx.clearRect(0, 0, width, height);
-
-            for (const [b, style] of BUCKET_STYLES.entries()) {
-                ctx.beginPath();
-                ctx.strokeStyle = style;
-                for (const drop of DROPS[b]) {
-                    ctx.moveTo(drop.x, drop.y);
-                    ctx.lineTo(drop.x, drop.y + drop.length);
-
-                    drop.y += drop.speed * deltaTime;
-                    if (drop.y > height) {
-                        drop.y = ((drop.y + drop.length) % (height + drop.length)) - drop.length;
-                        drop.x = Math.random() * width;
-                    }
-                }
-                ctx.stroke();
-            }
-
-            animationId = requestAnimationFrame(draw);
-        }
-
-        // Begin drawing rain
-        draw(lastTime);
-
-        // Resize canvas on window resize
+        // Hook resize event
         let resizeTimeout: ReturnType<typeof setTimeout>;
         function onResize() {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                resizeCanvas(ctx);
-                rainState.dropCount = _getScaledDropCount();
+                rainState.dropCount = getScaledDropCount();
+                worker.postMessage({
+                    type: 'resize',
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    dpr: window.devicePixelRatio || 1,
+                } satisfies ToWorkerMsg);
             }, 25);
         }
         window.addEventListener('resize', onResize);
 
-        // Reset time on visibility change
+        // Hook visibility change
         function onVisibilityChange() {
-            if (!document.hidden) {
-                lastTime = performance.now();
-            }
+            worker.postMessage({ type: 'visibility', hidden: document.hidden } satisfies ToWorkerMsg);
         }
         document.addEventListener('visibilitychange', onVisibilityChange);
 
         // Cleanup
         return () => {
-            cancelAnimationFrame(animationId);
+            workerRef = null;
+            worker.terminate();
+            clearTimeout(resizeTimeout);
             window.removeEventListener('resize', onResize);
             document.removeEventListener('visibilitychange', onVisibilityChange);
         };
     });
+
+    // Effect 2: Forward dropCount changes to the worker (slider or resize).
+    $effect(() => {
+        workerRef?.postMessage({ type: 'setDrops', count: rainState.dropCount } satisfies ToWorkerMsg);
+    });
 </script>
 
-<canvas bind:this={canvas} class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"></canvas>
+<canvas bind:this={canvas} class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"> </canvas>

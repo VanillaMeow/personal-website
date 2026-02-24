@@ -159,6 +159,8 @@ dist/
 # AI junk
 .claude/
 CLAUDE.md
+GEMINI.MD
+AGENTS.md
 
 ## Project specific
 

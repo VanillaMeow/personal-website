@@ -3,45 +3,18 @@
 import { RainShaderGLRenderer } from './rainShaderGL';
 import type { ToWorkerMsg } from './types';
 
-let paused = false;
-let accumulatedTime = 0;
-let lastTimestamp = 0;
-let renderer: RainShaderGLRenderer | null = null;
-let frameStarted = false;
+let renderer: RainShaderGLRenderer | undefined;
 
-function draw(now: DOMHighResTimeStamp): void {
-    if (!renderer) {
-        frameStarted = false;
-        return;
-    }
-
-    if (!paused) {
-        accumulatedTime += (now - lastTimestamp) / 1000;
-    }
-    lastTimestamp = now;
-    renderer.render(accumulatedTime);
-    requestAnimationFrame(draw);
-}
-
-self.onmessage = (event: MessageEvent<ToWorkerMsg>) => {
+function onMessageCallback(event: MessageEvent<ToWorkerMsg>): void {
     const msg = event.data;
 
     switch (msg.type) {
         case 'init': {
-            if (renderer) {
-                break;
-            }
-
             try {
+                renderer?.stop();
                 renderer = new RainShaderGLRenderer(msg.canvas);
-                lastTimestamp = performance.now();
-                if (!frameStarted) {
-                    frameStarted = true;
-                    requestAnimationFrame(draw);
-                }
+                renderer.start();
             } catch (error) {
-                renderer = null;
-                frameStarted = false;
                 console.error('Failed to initialize RainShaderGLRenderer:', error);
             }
             break;
@@ -57,12 +30,12 @@ self.onmessage = (event: MessageEvent<ToWorkerMsg>) => {
             break;
         }
 
-        case 'visibility': {
-            paused = msg.hidden;
-            if (!msg.hidden) {
-                lastTimestamp = performance.now();
-            }
+        case 'setVisibility': {
+            renderer?.setVisibility(msg.hidden);
             break;
         }
     }
-};
+}
+
+// Bind message handler
+self.onmessage = onMessageCallback;

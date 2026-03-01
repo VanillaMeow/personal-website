@@ -11,9 +11,9 @@
         return Math.round(BASE_DROP_COUNT * (window.innerWidth / BASELINE_WIDTH));
     }
 
-    // Effect 1: Worker lifecycle — runs once on mount.
+    // Effect 1: Worker lifecycle — runs once on mount
     // Effect 1 has no reactive reads, so a dropCount change never recreates the worker
-    // (which would break transferControlToOffscreen, which can only be called once per canvas).
+    // (which would break transferControlToOffscreen, which can only be called once per canvas)
     $effect(() => {
         // Create worker
         const worker = new Worker(new URL('./rainWorker.ts', import.meta.url), { type: 'module' });
@@ -52,7 +52,7 @@
 
         // Hook visibility change
         function onVisibilityChange() {
-            worker.postMessage({ type: 'visibility', hidden: document.hidden } satisfies ToWorkerMsg);
+            worker.postMessage({ type: 'setVisibility', hidden: document.hidden } satisfies ToWorkerMsg);
         }
         document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -66,7 +66,7 @@
         };
     });
 
-    // Effect 2: Forward dropCount changes to the worker (slider or resize).
+    // Effect 2: Forward dropCount changes to the worker (slider or resize)
     $effect(() => {
         workerRef?.postMessage({ type: 'setDrops', count: rainState.dropCount } satisfies ToWorkerMsg);
     });

@@ -14,14 +14,22 @@ export class RainShaderGLRenderer {
     private readonly programInfo: twgl.ProgramInfo;
     private bufferInfo!: twgl.BufferInfo;
 
+    // Configuration
     private dropCount = 0;
     private resolution: [number, number] = [1, 1];
     private capacity = 0;
 
+    // Data buffers
     private xData: Uint16Array = new Uint16Array();
     private speedData: Uint16Array = new Uint16Array();
     private lengthData: Uint16Array = new Uint16Array();
     private phaseData: Uint16Array = new Uint16Array();
+
+    // Rendering state
+    private paused = false;
+    private accumulatedTime = 0;
+    private lastTimestamp = 0;
+    private animationFrameId: number | null = null;
 
     public constructor(canvas: OffscreenCanvas) {
         const ctx = canvas.getContext('webgl2');
@@ -146,6 +154,47 @@ export class RainShaderGLRenderer {
         }
     }
 
+    private _drawFrame(now: DOMHighResTimeStamp): void {
+        if (!this.paused) {
+            this.accumulatedTime += (now - this.lastTimestamp) / 1000;
+            this._render(this.accumulatedTime);
+        }
+
+        this.lastTimestamp = now;
+        this.animationFrameId = requestAnimationFrame(this._drawFrame.bind(this));
+    }
+
+    private _render(time: number): void {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+        twgl.setUniforms(this.programInfo, { u_time: time });
+        this.gl.drawArraysInstanced(this.gl.LINES, 0, 2, this.dropCount);
+    }
+
+    public start(): void {
+        if (this.animationFrameId !== null) {
+            return;
+        }
+
+        const now = performance.now();
+        this.lastTimestamp = now;
+
+        // Let's just render once to kick off the animation
+        this._render(0);
+
+        // Then start the animation loop
+        this._drawFrame(now);
+    }
+
+    public stop(): void {
+        if (this.animationFrameId === null) {
+            return;
+        }
+
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+    }
+
     public resize(width: number, height: number, dpr: number): void {
         const canvas = this.gl.canvas as OffscreenCanvas;
         canvas.width = width * dpr;
@@ -163,11 +212,10 @@ export class RainShaderGLRenderer {
         this._syncDropCountUniform();
     }
 
-    public render(time: number): void {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-
-
-        twgl.setUniforms(this.programInfo, { u_time: time });
-        this.gl.drawArraysInstanced(this.gl.LINES, 0, 2, this.dropCount);
+    public setVisibility(hidden: boolean): void {
+        this.paused = hidden;
+        if (!hidden) {
+            this.lastTimestamp = performance.now();
+        }
     }
 }

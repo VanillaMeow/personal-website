@@ -3,16 +3,17 @@
     import { cubicOut } from 'svelte/easing';
     import { fly } from 'svelte/transition';
 
-    import avatarImage from '../../assets/avatar.webp';
     import { BIO, NAME, SOCIALS } from '../../lib/data';
-
+    import { avatarData } from '../../lib/sharedState.svelte';
 </script>
 
-<div>
+<div class="">
     <!-- Profile -->
     <div class="flex items-start gap-5 mb-8">
         <img
-            src={avatarImage.src}
+            src={avatarData.src}
+            decoding="async"
+            loading="eager"
             alt={NAME}
             draggable="false"
             class="w-14 h-14 sm:w-20 sm:h-20 rounded-full shrink-0 ring-3 ring-white/10 object-cover select-none"

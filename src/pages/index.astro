@@ -1,31 +1,46 @@
 ---
-import { Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
 
+import avatarImage from '../assets/avatar.png';
 import bgImage from '../assets/bg.png';
 import Card from '../components/MainCard.svelte';
 import Rain from '../components/rain/Rain.svelte';
 import Layout from '../layouts/Layout.astro';
+
+const optimizedBg = await getImage({
+    src: bgImage,
+    width: 1280,
+    height: 720,
+    format: 'webp',
+    quality: 1,
+});
+
+const optimizedAvatar = await getImage({
+    src: avatarImage,
+    width: 128,
+    height: 128,
+    format: 'webp',
+    quality: 90,
+});
 ---
 
 <Layout>
     <!-- Background image -->
-    <Image
-        src={bgImage}
+    <img
+        src={optimizedBg.src}
         alt='Background image'
-        class='fixed inset-0 -z-20 w-full h-full object-cover object-center scale-110 blur-12px brightness-40'
-        width='1920'
-        height='1080'
-        loading='lazy'
+        loading='eager'
         decoding='async'
         fetchpriority='high'
+        class='fixed inset-0 -z-20 w-full h-full object-cover object-center scale-110 blur-12px brightness-40'
         aria-hidden='true'
     />
 
     <!-- Rain animation -->
-    <Rain client:load client:only='svelte' />
+    <Rain client:load />
 
     <!-- Main content -->
     <main class='relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4'>
-        <Card client:load />
+        <Card client:load avatarSrc={optimizedAvatar.src} />
     </main>
 </Layout>

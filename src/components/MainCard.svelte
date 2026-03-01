@@ -3,7 +3,7 @@
     import { avatarData } from '../lib/sharedState.svelte';
     import CardContent from './CardContent.svelte';
 
-    let { avatarSrc = $bindable() }: { avatarSrc: string } = $props();
+    let { avatarSrc = $bindable('') }: { avatarSrc: string } = $props();
     avatarData.src = avatarSrc;
 
     // Wait for DOM to mount

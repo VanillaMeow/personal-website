@@ -1,3 +1,5 @@
+import ls from 'localstorage-slim';
+
 export interface RepoInfo {
     name: string;
     description: string | null;
@@ -6,85 +8,76 @@ export interface RepoInfo {
     loaded: boolean;
 }
 
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+interface GitHubRepoResponse {
+    name: string;
+    description: string | null;
+    language: string | null;
+    html_url: string;
+}
 
-function cacheKey(slug: string): string {
+export const repoCache: Record<string, RepoInfo> = $state({});
+
+const CACHE_TTL_SECONDS = 60 * 60; // 1 hour
+
+function _cacheKey(slug: string): string {
     return `gh_repo:${slug}`;
 }
 
 function readCache(slug: string): RepoInfo | null {
-    try {
-        const raw = sessionStorage.getItem(cacheKey(slug));
-        if (!raw) {
-            return null;
-        }
-        const entry = JSON.parse(raw) as { data: RepoInfo; ts: number };
-        if (Date.now() - entry.ts > CACHE_TTL) {
-            sessionStorage.removeItem(cacheKey(slug));
-            return null;
-        }
-        return entry.data;
-    } catch {
-        return null;
-    }
+    return ls.get<RepoInfo>(_cacheKey(slug));
 }
 
 function writeCache(slug: string, data: RepoInfo): void {
     try {
-        sessionStorage.setItem(cacheKey(slug), JSON.stringify({ data, ts: Date.now() }));
+        ls.set(_cacheKey(slug), data, { ttl: CACHE_TTL_SECONDS });
     } catch {
         // sessionStorage full or unavailable
     }
 }
 
-export const repoCache: Record<string, RepoInfo> = $state({});
+async function fetchRepo(slug: string, owner: string): Promise<void> {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${slug}`);
+    if (!res.ok) {
+        throw new Error(`${res.status}`);
+    }
+
+    const data = (await res.json()) as GitHubRepoResponse;
+    const info: RepoInfo = {
+        name: data.name,
+        description: data.description,
+        language: data.language,
+        url: data.html_url,
+        loaded: true,
+    };
+    repoCache[slug] = info;
+    writeCache(slug, info);
+}
 
 export function fetchRepos(slugs: string[], owner: string, baseUrl: string): void {
     const toFetch: string[] = [];
 
+    // Read from cache
     for (const slug of slugs) {
-        const cached = readCache(slug);
-        if (cached) {
-            repoCache[slug] = cached;
-        } else {
-            // placeholder while loading
-            repoCache[slug] = {
-                name: slug,
-                description: null,
-                language: null,
-                url: `${baseUrl}${slug}`,
-                loaded: false,
-            };
-            toFetch.push(slug);
+        const maybeCached = readCache(slug);
+
+        if (maybeCached) {
+            repoCache[slug] = maybeCached;
+            continue;
         }
+
+        // Placeholder while loading
+        repoCache[slug] = {
+            name: slug,
+            description: null,
+            language: null,
+            url: `${baseUrl}${slug}`,
+            loaded: false,
+        };
+        toFetch.push(slug);
     }
 
+    // Fetch in parallel
     for (const slug of toFetch) {
-        fetch(`https://api.github.com/repos/${owner}/${slug}`)
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error(`${res.status}`);
-                }
-                return res.json() as Promise<{
-                    name: string;
-                    description: string | null;
-                    language: string | null;
-                    html_url: string;
-                }>;
-            })
-            .then((data) => {
-                const info: RepoInfo = {
-                    name: data.name,
-                    description: data.description,
-                    language: data.language,
-                    url: data.html_url,
-                    loaded: true,
-                };
-                repoCache[slug] = info;
-                writeCache(slug, info);
-            })
-            .catch(() => {
-                // placeholder already set, nothing to do
-            });
+        void fetchRepo(slug, owner);
     }
 }

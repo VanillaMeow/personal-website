@@ -37,7 +37,7 @@ const optimizedAvatar = await getImage({
     />
 
     <!-- Rain animation -->
-    <Rain client:load />
+    <Rain client:load client:only='svelte'/>
 
     <!-- Main content -->
     <main class='relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4'>

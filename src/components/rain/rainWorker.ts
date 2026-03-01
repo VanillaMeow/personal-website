@@ -15,7 +15,10 @@ function onMessageCallback(event: MessageEvent<ToWorkerMsg>): void {
                 renderer = new RainShaderGLRenderer(msg.canvas);
                 renderer.start();
             } catch (error) {
-                console.error('Failed to initialize RainShaderGLRenderer:', error);
+                console.error(
+                    'Failed to initialize RainShaderGLRenderer:',
+                    error,
+                );
             }
             break;
         }

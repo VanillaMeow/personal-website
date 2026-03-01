@@ -8,7 +8,9 @@
     const BASE_DROP_COUNT = 2500;
     const BASELINE_WIDTH = 1920;
     function getScaledDropCount(): number {
-        return Math.round(BASE_DROP_COUNT * (window.innerWidth / BASELINE_WIDTH));
+        return Math.round(
+            BASE_DROP_COUNT * (window.innerWidth / BASELINE_WIDTH),
+        );
     }
 
     // Effect 1: Worker lifecycle — runs once on mount
@@ -16,7 +18,9 @@
     // (which would break transferControlToOffscreen, which can only be called once per canvas)
     $effect(() => {
         // Create worker
-        const worker = new Worker(new URL('./rainWorker.ts', import.meta.url), { type: 'module' });
+        const worker = new Worker(new URL('./rainWorker.ts', import.meta.url), {
+            type: 'module',
+        });
         workerRef = worker;
 
         // Init canvas
@@ -26,7 +30,10 @@
         rainState.dropCount = getScaledDropCount();
 
         // Init worker
-        worker.postMessage({ type: 'init', canvas: offscreenCanvas } satisfies ToWorkerMsg, [offscreenCanvas]);
+        worker.postMessage(
+            { type: 'init', canvas: offscreenCanvas } satisfies ToWorkerMsg,
+            [offscreenCanvas],
+        );
         worker.postMessage({
             type: 'resize',
             width: window.innerWidth,
@@ -52,7 +59,10 @@
 
         // Hook visibility change
         function onVisibilityChange() {
-            worker.postMessage({ type: 'setVisibility', hidden: document.hidden } satisfies ToWorkerMsg);
+            worker.postMessage({
+                type: 'setVisibility',
+                hidden: document.hidden,
+            } satisfies ToWorkerMsg);
         }
         document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -62,14 +72,25 @@
             worker.terminate();
             clearTimeout(resizeTimeout);
             window.removeEventListener('resize', onResize);
-            document.removeEventListener('visibilitychange', onVisibilityChange);
+            document.removeEventListener(
+                'visibilitychange',
+                onVisibilityChange,
+            );
         };
     });
 
     // Effect 2: Forward dropCount changes to the worker (slider or resize)
     $effect(() => {
-        workerRef?.postMessage({ type: 'setDrops', count: rainState.dropCount } satisfies ToWorkerMsg);
+        workerRef?.postMessage({
+            type: 'setDrops',
+            count: rainState.dropCount,
+        } satisfies ToWorkerMsg);
     });
 </script>
 
-<canvas bind:this={canvas} class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"> </canvas>
+<canvas
+    bind:this={canvas}
+    class="fixed inset-0 z-0 pointer-events-none"
+    aria-hidden="true"
+>
+</canvas>

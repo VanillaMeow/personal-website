@@ -44,7 +44,10 @@ export class RainShaderGLRenderer {
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.clearColor(0, 0, 0, 0);
 
-        this.resolution = [Math.max(1, this.gl.drawingBufferWidth), Math.max(1, this.gl.drawingBufferHeight)];
+        this.resolution = [
+            Math.max(1, this.gl.drawingBufferWidth),
+            Math.max(1, this.gl.drawingBufferHeight),
+        ];
         this._ensureCapacity(INITIAL_CAPACITY);
         this._syncResolutionUniform();
         this._syncDropCountUniform();
@@ -64,10 +67,26 @@ export class RainShaderGLRenderer {
             return;
         }
 
-        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.a_x, this.xData);
-        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.a_speed_t, this.speedData);
-        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.a_length_t, this.lengthData);
-        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.a_phase, this.phaseData);
+        twgl.setAttribInfoBufferFromArray(
+            this.gl,
+            this.bufferInfo.attribs.a_x,
+            this.xData,
+        );
+        twgl.setAttribInfoBufferFromArray(
+            this.gl,
+            this.bufferInfo.attribs.a_speed_t,
+            this.speedData,
+        );
+        twgl.setAttribInfoBufferFromArray(
+            this.gl,
+            this.bufferInfo.attribs.a_length_t,
+            this.lengthData,
+        );
+        twgl.setAttribInfoBufferFromArray(
+            this.gl,
+            this.bufferInfo.attribs.a_phase,
+            this.phaseData,
+        );
     }
 
     private _syncResolutionUniform(): void {
@@ -113,7 +132,11 @@ export class RainShaderGLRenderer {
                 drawType: this.gl.DYNAMIC_DRAW,
             },
         });
-        twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.bufferInfo);
+        twgl.setBuffersAndAttributes(
+            this.gl,
+            this.programInfo,
+            this.bufferInfo,
+        );
     }
 
     private _ensureCapacity(required: number): void {
@@ -122,7 +145,10 @@ export class RainShaderGLRenderer {
         }
 
         const previousCapacity = this.capacity;
-        let nextCapacity = Math.max(INITIAL_CAPACITY, this.capacity || INITIAL_CAPACITY);
+        let nextCapacity = Math.max(
+            INITIAL_CAPACITY,
+            this.capacity || INITIAL_CAPACITY,
+        );
         while (nextCapacity < required) {
             nextCapacity *= 2;
         }
@@ -161,7 +187,9 @@ export class RainShaderGLRenderer {
         }
 
         this.lastTimestamp = now;
-        this.animationFrameId = requestAnimationFrame(this._drawFrame.bind(this));
+        this.animationFrameId = requestAnimationFrame(
+            this._drawFrame.bind(this),
+        );
     }
 
     private _render(time: number): void {
@@ -199,8 +227,16 @@ export class RainShaderGLRenderer {
         const canvas = this.gl.canvas as OffscreenCanvas;
         canvas.width = width * dpr;
         canvas.height = height * dpr;
-        this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-        this.resolution = [Math.max(1, canvas.width), Math.max(1, canvas.height)];
+        this.gl.viewport(
+            0,
+            0,
+            this.gl.drawingBufferWidth,
+            this.gl.drawingBufferHeight,
+        );
+        this.resolution = [
+            Math.max(1, canvas.width),
+            Math.max(1, canvas.height),
+        ];
         this._syncResolutionUniform();
     }
 

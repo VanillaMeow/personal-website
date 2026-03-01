@@ -9,7 +9,7 @@
 
 <div class="">
     <!-- Profile -->
-    <div class="flex items-start gap-5 mb-8">
+    <div class="flex items-start gap-5 mb-8 ml-1 mt-1">
         <img
             src={avatarData.src}
             decoding="async"

@@ -2,11 +2,11 @@ import * as twgl from 'twgl.js';
 import fragSrc from './rainShader.frag?raw';
 import vertSrc from './rainShader.vert?raw';
 
-const INITIAL_CAPACITY = 1024;
-const U16_RANGE = 65536;
+const INITIAL_CAPACITY = 2501; // Matches dropCount defaults
+const U16_MAX = 65536; // 2^16
 
-function randomU16(): number {
-    return Math.floor(Math.random() * U16_RANGE);
+function _randomU16(): number {
+    return Math.floor(Math.random() * U16_MAX);
 }
 
 export class RainShaderGLRenderer {
@@ -52,10 +52,10 @@ export class RainShaderGLRenderer {
 
     private _fillRandomRange(start: number, end: number): void {
         for (let i = start; i < end; i++) {
-            this.xData[i] = randomU16();
-            this.speedData[i] = randomU16();
-            this.lengthData[i] = randomU16();
-            this.phaseData[i] = randomU16();
+            this.xData[i] = _randomU16();
+            this.speedData[i] = _randomU16();
+            this.lengthData[i] = _randomU16();
+            this.phaseData[i] = _randomU16();
         }
     }
 

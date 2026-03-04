@@ -1,118 +1,148 @@
 import { tick } from 'svelte';
+import type { Tab } from './data';
 
-import { TABS } from './data';
+export interface ViewTransitionElements {
+    card: HTMLElement;
+    container: HTMLElement;
+}
 
-export const INTRO_TRANSITION_DURATION = 750;
+export interface ViewTransitionOptions<TTab extends Tab = Tab> {
+    tabs: readonly TTab[];
+    initialView?: string;
+}
 
-export const REPO_CARD_TRANSITION_DELAY = 400;
+export class ViewTransitionController<TTab extends Tab = Tab> {
+    readonly tabs: readonly TTab[];
+    readonly initialView: string;
 
-const TRANSITION_DURATION = 500;
-const TRANSITION_EASING = 'cubic-bezier(0.33, 1, 0.68, 1)';
+    view = $state('');
+    ready = $state(false);
+    transitioning = $state(false);
+    clipping = $state(false);
+    rawHeights = $state<Record<string, number>>({});
+    containerHeight = $state(0);
 
-// How long to keep overflow clipped after a view switch — long enough
-// for the slowest child animation (staggered repo cards) to finish
-const CLIP_DURATION = 1500;
+    #clipTimer: ReturnType<typeof setTimeout> | undefined;
 
-export function createViewTransition() {
-    let view = $state('');
-    let activeTab = $derived(TABS.find((t) => t.key === view) ?? TABS[0]);
-    let ready = $state(false);
-    let transitioning = $state(false);
-    let clipping = $state(false);
-    let clipTimer: ReturnType<typeof setTimeout> | undefined;
+    constructor(options: ViewTransitionOptions<TTab>) {
+        this.tabs = options.tabs;
+        this.initialView = options.initialView ?? options.tabs[0]?.key ?? '';
 
-    // Panel heights tracked via bind:clientHeight
-    let rawHeights: Record<string, number> = $state({});
+        // Validate
+        this._validatePerViewTransitions();
 
-    // The explicit pixel height applied to the container
-    let containerHeight = $state(0);
-
-    // Set initial view after mount so {#if} insertion triggers in: transitions
-    $effect(() => {
-        if (!view) {
-            view = TABS[0].key;
-        }
-    });
-
-    // Sync container height to active panel when not animating
-    $effect(() => {
-        const h = rawHeights[view];
-        if (h && h > 0 && !transitioning) {
-            containerHeight = h;
-            ready = true;
-        }
-    });
-
-    function switchView(newView: string, cardEl: HTMLElement, containerEl: HTMLElement) {
-        if (newView === view || !ready || transitioning) {
-            return;
-        }
-
-        const oldWidth = cardEl.offsetWidth;
-        const oldHeight = containerHeight;
-
-        transitioning = true;
-        clipping = true;
-        clearTimeout(clipTimer);
-        clipTimer = setTimeout(() => {
-            clipping = false;
-        }, CLIP_DURATION);
-
-        view = newView;
-
-        tick().then(() => {
-            const newWidth = cardEl.offsetWidth;
-
-            // Query the incoming panel directly — bind:clientHeight may
-            // not have fired yet since ResizeObserver is async
-            const newPanel = containerEl.querySelector<HTMLElement>(`[data-view="${newView}"]`);
-            const newHeight = newPanel?.offsetHeight ?? oldHeight;
-            containerHeight = newHeight;
-
-            // WAAPI width — visual only, layout already at final width
-            if (oldWidth !== newWidth) {
-                cardEl.animate(
-                    { maxWidth: [`${oldWidth}px`, `${newWidth}px`] },
-                    { duration: TRANSITION_DURATION, easing: TRANSITION_EASING },
-                );
+        // Set initial view after mount so {#if} insertion triggers in: transitions
+        $effect(() => {
+            if (!this.view && this.initialView) {
+                this.view = this.initialView;
             }
+        });
 
-            // WAAPI height — animates the explicit container height
-            if (oldHeight !== newHeight) {
-                containerEl.animate(
-                    { height: [`${oldHeight}px`, `${newHeight}px`] },
-                    { duration: TRANSITION_DURATION, easing: TRANSITION_EASING },
-                ).onfinish = () => {
-                    transitioning = false;
-                };
-            } else {
-                transitioning = false;
+        // Sync container height to active panel when not animating
+        $effect(() => {
+            const nextHeight = this.rawHeights[this.view];
+            if (nextHeight && nextHeight > 0 && !this.transitioning) {
+                this.containerHeight = nextHeight;
+                this.ready = true;
             }
         });
     }
 
-    return {
-        get view() {
-            return view;
-        },
-        get activeTab() {
-            return activeTab;
-        },
-        get rawHeights() {
-            return rawHeights;
-        },
-        get ready() {
-            return ready;
-        },
-        get containerHeight() {
-            return containerHeight;
-        },
-        get transitioning() {
-            return transitioning;
-        },
-        get clipping() {
-            return clipping;
-        },
-        switchView,
-    };
+    get activeView(): TTab | null {
+        return this._getTab(this.view) ?? this.tabs[0] ?? null;
+    }
+
+    public switchView(newView: string, elements: ViewTransitionElements): void {
+        if (
+            newView === this.view ||
+            !this.ready ||
+            this.transitioning ||
+            !this._hasView(newView)
+        ) {
+            return;
+        }
+
+        const transitionConfig = this._resolveTransitionConfig(newView);
+        const oldWidth = elements.card.offsetWidth;
+        const oldHeight = this.containerHeight;
+
+        this.transitioning = true;
+        this.clipping = true;
+        clearTimeout(this.#clipTimer);
+        this.#clipTimer = setTimeout(() => {
+            this.clipping = false;
+        }, transitionConfig.clipDuration);
+
+        this.view = newView;
+
+        tick().then(() => {
+            const newWidth = elements.card.offsetWidth;
+
+            // Query the incoming panel directly because bind:clientHeight
+            // may not have fired yet since ResizeObserver is async
+            const incomingPanel = elements.container.querySelector<HTMLElement>(
+                `[data-view="${newView}"]`,
+            );
+            const newHeight = incomingPanel?.offsetHeight ?? oldHeight;
+            this.containerHeight = newHeight;
+
+            // WAAPI width animation is visual only, layout is already at the final width
+            if (oldWidth !== newWidth) {
+                elements.card.animate(
+                    { maxWidth: [`${oldWidth}px`, `${newWidth}px`] },
+                    {
+                        duration: transitionConfig.transitionDuration,
+                        easing: transitionConfig.transitionEasing,
+                    },
+                );
+            }
+
+            // WAAPI height animation drives the explicit container height
+            if (oldHeight !== newHeight) {
+                elements.container.animate(
+                    { height: [`${oldHeight}px`, `${newHeight}px`] },
+                    {
+                        duration: transitionConfig.transitionDuration,
+                        easing: transitionConfig.transitionEasing,
+                    },
+                ).onfinish = () => {
+                    this.transitioning = false;
+                };
+            } else {
+                this.transitioning = false;
+            }
+        });
+    }
+
+    public destroy(): void {
+        clearTimeout(this.#clipTimer);
+    }
+
+    private _hasView(key: string): boolean {
+        return this._getTab(key) !== undefined;
+    }
+
+    private _resolveTransitionConfig(viewKey: string): TTab['viewTransition'] {
+        const tab = this._getTab(viewKey);
+        if (!tab) {
+            throw new Error(
+                `Missing per-view transition config for "${viewKey}"`,
+            );
+        }
+        return tab.viewTransition;
+    }
+
+    private _validatePerViewTransitions(): void {
+        for (const tab of this.tabs) {
+            if (!tab.viewTransition) {
+                throw new Error(
+                    `Missing per-view transition config for "${tab.key}"`,
+                );
+            }
+        }
+    }
+
+    private _getTab(viewKey: string): TTab | undefined {
+        return this.tabs.find((tab) => tab.key === viewKey);
+    }
 }

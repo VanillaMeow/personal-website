@@ -1,65 +1,62 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
-    "vcs": {
-        "enabled": true,
-        "clientKind": "git",
-        "useIgnoreFile": true
-    },
-    "html": {
-        "formatter": {
-            "enabled": false
-        },
-        "experimentalFullSupportEnabled": true
-    },
-    "files": {
-        "ignoreUnknown": false
-    },
-    "formatter": {
-        "enabled": false
-    },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "recommended": true,
-            "correctness": {
-                "noUnusedImports": "off",
-                "noUnusedVariables": "off"
-            },
-            "style": {
-                "useConst": "off"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "quoteStyle": "single"
-        }
-    },
-    "assist": {
-        "enabled": true,
-        "actions": {
-            "source": {
-                "organizeImports": "on"
-            }
-        }
-    },
-    "overrides": [
-        {
-            "includes": [
-                "*.svelte",
-                "src/**/*.svelte"
-            ],
-            "linter": {
-                "rules": {
-                    "correctness": {
-                        "noUnusedImports": "off",
-                        "noUnusedVariables": "off"
-                    },
-                    "style": {
-                        "useConst": "off"
-                    }
-                }
-            }
-        }
-    ]
+	"$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"html": {
+		"formatter": {
+			"enabled": false
+		},
+		"experimentalFullSupportEnabled": true
+	},
+	"files": {
+		"ignoreUnknown": false
+	},
+	"formatter": {
+		"enabled": false
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "off",
+				"noUnusedVariables": "off"
+			},
+			"style": {
+				"useConst": "off"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["*.svelte", "src/**/*.svelte"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					},
+					"style": {
+						"useConst": "off"
+					}
+				}
+			}
+		}
+	]
 }

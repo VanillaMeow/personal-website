@@ -1,35 +1,62 @@
+<!-- @unocss-skip-start -->
+
 <script lang="ts">
     import type { Component } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import { cubicOut } from 'svelte/easing';
     import { fade, fly } from 'svelte/transition';
 
-    import { GITHUB_OWNER, REPO_BASE, REPO_SLUGS, TABS } from '../lib/data';
+    import {
+        GITHUB_OWNER,
+        INTRO_TRANSITION_DURATION,
+        REPO_BASE,
+        REPO_SLUGS,
+        TABS,
+    } from '../lib/data';
     import { fetchRepos } from '../lib/github.svelte';
-    import { createViewTransition, INTRO_TRANSITION_DURATION } from '../lib/viewTransition.svelte';
+    import { ViewTransitionController } from '../lib/viewTransition.svelte';
     import RainSlider from './rain/RainSlider.svelte';
     import TabNav from './TabNav.svelte';
     import HomeView from './views/HomeView.svelte';
     import PortfolioView from './views/PortfolioView.svelte';
+
+    // Svelte binded elements
+    let cardEl: HTMLDivElement;
+    let containerEl: HTMLDivElement;
 
     const VIEWS: Record<string, Component> = {
         home: HomeView,
         portfolio: PortfolioView,
     };
 
-    const vt = createViewTransition();
+    const vt = new ViewTransitionController({
+        tabs: TABS,
+    });
 
-    // Lazy fetch repos on mount
-    $effect(() => {
+    // Lazy fetch repos cache on mount
+    onMount(() => {
         fetchRepos(REPO_SLUGS, GITHUB_OWNER, REPO_BASE);
     });
 
-    let cardEl: HTMLDivElement;
-    let containerEl: HTMLDivElement;
+    onDestroy(() => {
+        vt.destroy();
+    });
+
+    // Fuckass hack to prevent the initial intro animation from being clipped
+    let initialIntroDone = $state(false);
+    function handleInitialIntroEnd(viewKey: string): void {
+        if (!initialIntroDone && viewKey === vt.initialView) {
+            initialIntroDone = true;
+        }
+    }
 </script>
+
+<!-- @unocss-skip-end -->
 
 <div
     bind:this={cardEl}
-    class="card glass-card w-full p-4 sm:p-6 md:p-8 relative overflow-hidden {vt.activeTab.maxWidth}"
+    class="card glass-card w-full p-4 sm:p-6 md:p-8 relative overflow-hidden {vt
+        .activeView?.maxWidth ?? ''}"
     in:fade={{ duration: INTRO_TRANSITION_DURATION, easing: cubicOut }}
 >
     <!-- Header row: rain control + tabs -->
@@ -42,15 +69,25 @@
         }}
     >
         <RainSlider />
-        <TabNav view={vt.view} onchange={(v) => vt.switchView(v, cardEl, containerEl)} />
+        <TabNav
+            view={vt.view}
+            onchange={(v) =>
+                vt.switchView(v, { card: cardEl, container: containerEl })}
+        />
     </div>
 
+    <!-- Container for the active view -->
     <div
         bind:this={containerEl}
         class="view-container"
-        style:overflow-y={vt.clipping ? 'clip' : 'auto'}
-        style:height={vt.ready ? vt.containerHeight + 'px' : 'auto'}
+        style:overflow-y={initialIntroDone
+            ? vt.clipping
+                ? 'clip'
+                : 'auto'
+            : 'visible'}
+        style:height={vt.ready ? `${vt.containerHeight}px` : 'auto'}
     >
+        <!-- Active view -->
         {#each TABS as tab (tab.key)}
             {#if vt.view === tab.key}
                 {@const View = VIEWS[tab.key]}
@@ -60,10 +97,9 @@
                     bind:clientHeight={vt.rawHeights[tab.key]}
                     in:fly={{
                         ...tab.transition,
-                        duration: 400,
-                        delay: INTRO_TRANSITION_DURATION / 2,
                         easing: cubicOut,
                     }}
+                    onintroend={() => handleInitialIntroEnd(tab.key)}
                     out:fade={{ duration: 200 }}
                 >
                     <View />

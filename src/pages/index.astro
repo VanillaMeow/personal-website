@@ -37,10 +37,12 @@ const optimizedAvatar = await getImage({
     />
 
     <!-- Rain animation -->
-    <Rain client:load client:only='svelte'/>
+    <Rain client:load client:only='svelte' />
 
     <!-- Main content -->
-    <main class='relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4'>
+    <main
+        class='relative z-10 flex items-center justify-center min-h-dvh p-2 sm:p-4'
+    >
         <Card client:load avatarSrc={optimizedAvatar.src} />
     </main>
 </Layout>

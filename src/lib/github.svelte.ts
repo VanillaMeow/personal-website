@@ -53,7 +53,11 @@ async function fetchRepo(slug: string, owner: string): Promise<void> {
     writeCache(slug, info);
 }
 
-export function fetchRepos(slugs: string[], owner: string, baseUrl: string): void {
+export function fetchRepos(
+    slugs: string[],
+    owner: string,
+    baseUrl: string,
+): void {
     const toFetch: string[] = [];
 
     // Read from cache

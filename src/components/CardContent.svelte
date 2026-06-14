@@ -41,14 +41,6 @@
     onDestroy(() => {
         vt.destroy();
     });
-
-    // Fuckass hack to prevent the initial intro animation from being clipped
-    let initialIntroDone = $state(false);
-    function handleInitialIntroEnd(viewKey: string): void {
-        if (!initialIntroDone && viewKey === vt.initialView) {
-            initialIntroDone = true;
-        }
-    }
 </script>
 
 <!-- @unocss-skip-end -->
@@ -80,11 +72,7 @@
     <div
         bind:this={containerEl}
         class="view-container"
-        style:overflow-y={initialIntroDone
-            ? vt.clipping
-                ? 'clip'
-                : 'auto'
-            : 'visible'}
+        style:overflow-y={vt.overflowY}
         style:height={vt.ready ? `${vt.containerHeight}px` : 'auto'}
     >
         <!-- Active view -->
@@ -99,7 +87,7 @@
                         ...tab.transition,
                         easing: cubicOut,
                     }}
-                    onintroend={() => handleInitialIntroEnd(tab.key)}
+                    onintroend={() => vt.handleIntroEnd(tab.key)}
                     out:fade={{ duration: 200 }}
                 >
                     <View />

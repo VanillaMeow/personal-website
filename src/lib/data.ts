@@ -26,7 +26,7 @@ export interface Tab {
     viewTransition: {
         transitionDuration: number;
         transitionEasing: string;
-        clipDuration: number;
+        clipExtraDuration?: number;
     };
 }
 
@@ -91,8 +91,6 @@ export const TABS: Tab[] = [
         viewTransition: {
             transitionDuration: 500,
             transitionEasing: 'cubic-bezier(0.33, 1, 0.68, 1)',
-            // svelte duration + svelte delay
-            clipDuration: 400 + 375,
         },
     },
     {
@@ -108,9 +106,8 @@ export const TABS: Tab[] = [
         viewTransition: {
             transitionDuration: 500,
             transitionEasing: 'cubic-bezier(0.33, 1, 0.68, 1)',
-            clipDuration:
-                // card total + svelte duration + svelte delay
-                REPO_SLUGS.length * PER_CARD_DELAY + 400 + 375,
+            // Keep overflow clipped while staggered repo cards finish entering.
+            clipExtraDuration: REPO_SLUGS.length * PER_CARD_DELAY,
         },
     },
 ] as const;

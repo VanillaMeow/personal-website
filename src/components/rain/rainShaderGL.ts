@@ -225,8 +225,11 @@ export class RainShaderGLRenderer {
 
     public resize(width: number, height: number, dpr: number): void {
         const canvas = this.gl.canvas as OffscreenCanvas;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
+        const pixelWidth = Math.max(1, Math.round(width * dpr));
+        const pixelHeight = Math.max(1, Math.round(height * dpr));
+
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
         this.gl.viewport(
             0,
             0,
@@ -234,8 +237,8 @@ export class RainShaderGLRenderer {
             this.gl.drawingBufferHeight,
         );
         this.resolution = [
-            Math.max(1, canvas.width),
-            Math.max(1, canvas.height),
+            pixelWidth,
+            pixelHeight,
         ];
         this._syncResolutionUniform();
     }

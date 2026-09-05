@@ -9,24 +9,24 @@
         "astro": "astro"
     },
     "dependencies": {
-        "@astrojs/check": "^0.9.9",
-        "@astrojs/svelte": "8.1.2",
-        "astro": "6.4.6",
+        "@astrojs/check": "^0.9.10",
+        "@astrojs/svelte": "9.0.1",
+        "astro": "7.3.1",
         "localstorage-slim": "^2.7.1",
         "prettier-plugin-astro": "^0.14.1",
-        "svelte": "^5.56.3",
+        "svelte": "^5.57.0",
         "twgl.js": "^7.0.0",
         "typescript": "^6.0.3"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.5.0",
-        "@iconify-json/lucide": "^1.2.112",
-        "@iconify-json/simple-icons": "^1.2.86",
+        "@biomejs/biome": "^2.5.12",
+        "@iconify-json/lucide": "^1.2.129",
+        "@iconify-json/simple-icons": "^1.2.94",
         "@iconify-json/twemoji": "^1.2.5",
-        "@unocss/astro": "^66.7.2",
-        "@unocss/preset-icons": "^66.7.2",
-        "prettier": "^3.8.4",
-        "prettier-plugin-svelte": "^4.1.0",
-        "unocss": "^66.7.2"
+        "@unocss/astro": "^66.10.0",
+        "@unocss/preset-icons": "^66.10.0",
+        "prettier": "^3.9.6",
+        "prettier-plugin-svelte": "^4.1.1",
+        "unocss": "^66.10.0"
     }
 }

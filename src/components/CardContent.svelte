@@ -2,18 +2,12 @@
 
 <script lang="ts">
     import type { Component } from 'svelte';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy } from 'svelte';
     import { cubicOut } from 'svelte/easing';
     import { fade, fly } from 'svelte/transition';
 
-    import {
-        GITHUB_OWNER,
-        INTRO_TRANSITION_DURATION,
-        REPO_BASE,
-        REPO_SLUGS,
-        TABS,
-    } from '../lib/data';
-    import { fetchRepos } from '../lib/github.svelte';
+    import { INTRO_TRANSITION_DURATION, TABS } from '../lib/data';
+    import { introState } from '../lib/sharedState.svelte';
     import { ViewTransitionController } from '../lib/viewTransition.svelte';
     import RainSlider from './rain/RainSlider.svelte';
     import TabNav from './TabNav.svelte';
@@ -31,11 +25,6 @@
 
     const vt = new ViewTransitionController({
         tabs: TABS,
-    });
-
-    // Lazy fetch repos cache on mount
-    onMount(() => {
-        fetchRepos(REPO_SLUGS, GITHUB_OWNER, REPO_BASE);
     });
 
     onDestroy(() => {
@@ -58,6 +47,10 @@
             duration: INTRO_TRANSITION_DURATION,
             delay: INTRO_TRANSITION_DURATION,
             easing: cubicOut,
+        }}
+        onintroend={() => {
+            // The header is the last part of the initial card animation
+            introState.complete = true;
         }}
     >
         <RainSlider />

@@ -228,6 +228,10 @@ export class RainShaderGLRenderer {
         const pixelWidth = Math.max(1, Math.round(width * dpr));
         const pixelHeight = Math.max(1, Math.round(height * dpr));
 
+        if (canvas.width === pixelWidth && canvas.height === pixelHeight) {
+            return;
+        }
+
         canvas.width = pixelWidth;
         canvas.height = pixelHeight;
         this.gl.viewport(
@@ -236,10 +240,7 @@ export class RainShaderGLRenderer {
             this.gl.drawingBufferWidth,
             this.gl.drawingBufferHeight,
         );
-        this.resolution = [
-            pixelWidth,
-            pixelHeight,
-        ];
+        this.resolution = [pixelWidth, pixelHeight];
         this._syncResolutionUniform();
     }
 

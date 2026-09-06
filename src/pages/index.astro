@@ -25,6 +25,7 @@ const optimizedAvatar = await getImage({
 ---
 
 <Layout>
+    <link slot='head' rel='preload' as='image' href={optimizedAvatar.src} />
     <!-- Background image -->
     <img
         src={optimizedBg.src}
@@ -37,7 +38,7 @@ const optimizedAvatar = await getImage({
     />
 
     <!-- Rain animation -->
-    <Rain client:load client:only='svelte' />
+    <Rain client:load />
 
     <!-- Main content -->
     <main

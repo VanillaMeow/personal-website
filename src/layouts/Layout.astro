@@ -19,6 +19,7 @@ const { title = 'leah' } = Astro.props;
             rel='stylesheet'
         />
         <title>{title}</title>
+        <slot name='head' />
     </head>
 
     <body

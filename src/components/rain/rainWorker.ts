@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { RainShaderGLRenderer } from './rainShaderGL';
-import type { ToWorkerMsg } from './types';
+import type { FromWorkerMsg, ToWorkerMsg } from './types';
 
 let renderer: RainShaderGLRenderer | undefined;
 
@@ -13,7 +13,14 @@ function onMessageCallback(event: MessageEvent<ToWorkerMsg>): void {
             try {
                 renderer?.stop();
                 renderer = new RainShaderGLRenderer(msg.canvas);
+                renderer.resize(msg.width, msg.height, msg.dpr);
+                renderer.setDrops(msg.count);
+                renderer.setVisibility(msg.hidden);
                 renderer.start();
+
+                requestAnimationFrame(() => {
+                    self.postMessage({ type: 'ready' } satisfies FromWorkerMsg);
+                });
             } catch (error) {
                 console.error(
                     'Failed to initialize RainShaderGLRenderer:',

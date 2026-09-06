@@ -6,19 +6,13 @@ export interface ViewTransitionElements {
     container: HTMLElement;
 }
 
-export interface ViewTransitionOptions<TTab extends Tab = Tab> {
-    tabs: readonly TTab[];
+export interface ViewTransitionOptions {
+    tabs: readonly Tab[];
     initialView?: string;
 }
 
-interface ResolvedViewTransitionConfig {
-    transitionDuration: number;
-    transitionEasing: string;
-    clipDuration: number;
-}
-
-export class ViewTransitionController<TTab extends Tab = Tab> {
-    readonly tabs: readonly TTab[];
+export class ViewTransitionController {
+    readonly tabs: readonly Tab[];
     readonly initialView: string;
 
     view = $state('');
@@ -26,14 +20,14 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
     transitioning = $state(false);
     clipping = $state(false);
     initialIntroDone = $state(false);
-    rawHeights = $state<Record<string, number>>({});
+    rawHeights = $state<Partial<Record<string, number>>>({});
     containerHeight = $state(0);
 
     #animations = new Set<Animation>();
     #clipTimer: ReturnType<typeof setTimeout> | undefined;
     #transitionId = 0;
 
-    constructor(options: ViewTransitionOptions<TTab>) {
+    constructor(options: ViewTransitionOptions) {
         this.tabs = options.tabs;
         this.initialView = options.initialView ?? options.tabs[0]?.key ?? '';
 
@@ -49,14 +43,14 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
         // Sync container height to active panel when not animating
         $effect(() => {
             const nextHeight = this.rawHeights[this.view];
-            if (nextHeight && nextHeight > 0 && !this.transitioning) {
+            if (nextHeight !== undefined && !this.transitioning) {
                 this.containerHeight = nextHeight;
                 this.ready = true;
             }
         });
     }
 
-    get activeView(): TTab | null {
+    get activeView(): Tab | null {
         return this._getTab(this.view) ?? this.tabs[0] ?? null;
     }
 
@@ -69,33 +63,34 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
     }
 
     public switchView(newView: string, elements: ViewTransitionElements): void {
-        if (
-            newView === this.view ||
-            !this.ready ||
-            this.transitioning ||
-            !this._hasView(newView)
-        ) {
+        if (newView === this.view || !this.ready || this.transitioning) {
             return;
         }
 
-        const transitionConfig = this._resolveTransitionConfig(newView);
+        const tab = this._getTab(newView);
+        if (!tab) {
+            return;
+        }
         const oldWidth = elements.card.offsetWidth;
         const oldHeight = this.containerHeight;
         const transitionId = ++this.#transitionId;
 
         this.transitioning = true;
-        this._clipFor(transitionConfig.clipDuration);
+        this._clipFor(
+            tab.transition.duration +
+                tab.transition.delay +
+                (tab.viewTransition.clipExtraDuration ?? 0),
+        );
 
         this.view = newView;
 
-        void this._animateResizeAfterDomUpdate(
+        void this._animateResizeAfterDomUpdate({
             transitionId,
-            newView,
+            tab,
             elements,
             oldWidth,
             oldHeight,
-            transitionConfig,
-        );
+        });
     }
 
     public handleIntroEnd(viewKey: string): void {
@@ -117,18 +112,19 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
         this.clipping = false;
     }
 
-    private _hasView(key: string): boolean {
-        return this._getTab(key) !== undefined;
-    }
-
-    private async _animateResizeAfterDomUpdate(
-        transitionId: number,
-        newView: string,
-        elements: ViewTransitionElements,
-        oldWidth: number,
-        oldHeight: number,
-        transitionConfig: ResolvedViewTransitionConfig,
-    ): Promise<void> {
+    private async _animateResizeAfterDomUpdate({
+        transitionId,
+        tab,
+        elements,
+        oldWidth,
+        oldHeight,
+    }: {
+        transitionId: number;
+        tab: Tab;
+        elements: ViewTransitionElements;
+        oldWidth: number;
+        oldHeight: number;
+    }): Promise<void> {
         const animations: Animation[] = [];
 
         try {
@@ -142,18 +138,20 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
 
             // Query the incoming panel directly because bind:clientHeight
             // may not have fired yet since ResizeObserver is async
-            const incomingPanel = this._findPanel(elements.container, newView);
+            const incomingPanel = this._findPanel(elements.container, tab.key);
             const newHeight = incomingPanel?.offsetHeight ?? oldHeight;
             this.containerHeight = newHeight;
 
-            // WAAPI width animation is visual only, layout is already at the final width
+            const animationOptions = {
+                duration: tab.viewTransition.transitionDuration,
+                easing: tab.viewTransition.transitionEasing,
+            };
+
+            // Animate maxWidth to resize the card; this also reflows its content
             if (oldWidth !== newWidth) {
                 const widthAnimation = elements.card.animate(
                     { maxWidth: [`${oldWidth}px`, `${newWidth}px`] },
-                    {
-                        duration: transitionConfig.transitionDuration,
-                        easing: transitionConfig.transitionEasing,
-                    },
+                    animationOptions,
                 );
                 animations.push(widthAnimation);
                 this.#animations.add(widthAnimation);
@@ -163,10 +161,7 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
             if (oldHeight !== newHeight) {
                 const heightAnimation = elements.container.animate(
                     { height: [`${oldHeight}px`, `${newHeight}px`] },
-                    {
-                        duration: transitionConfig.transitionDuration,
-                        easing: transitionConfig.transitionEasing,
-                    },
+                    animationOptions,
                 );
                 animations.push(heightAnimation);
                 this.#animations.add(heightAnimation);
@@ -186,26 +181,11 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
         }
     }
 
-    private _resolveTransitionConfig(
-        viewKey: string,
-    ): ResolvedViewTransitionConfig {
-        const tab = this._getTab(viewKey);
-        if (!tab) {
-            throw new Error(
-                `Missing per-view transition config for "${viewKey}"`,
-            );
+    private _validateTabs(): void {
+        if (this.tabs.length === 0) {
+            throw new Error('At least one tab is required');
         }
 
-        return {
-            ...tab.viewTransition,
-            clipDuration:
-                tab.transition.duration +
-                tab.transition.delay +
-                (tab.viewTransition.clipExtraDuration ?? 0),
-        };
-    }
-
-    private _validateTabs(): void {
         const seenKeys = new Set<string>();
 
         for (const tab of this.tabs) {
@@ -218,20 +198,14 @@ export class ViewTransitionController<TTab extends Tab = Tab> {
             }
 
             seenKeys.add(tab.key);
-
-            if (!tab.viewTransition) {
-                throw new Error(
-                    `Missing per-view transition config for "${tab.key}"`,
-                );
-            }
         }
 
-        if (this.initialView && !this._hasView(this.initialView)) {
+        if (!this._getTab(this.initialView)) {
             throw new Error(`Missing initial view "${this.initialView}"`);
         }
     }
 
-    private _getTab(viewKey: string): TTab | undefined {
+    private _getTab(viewKey: string): Tab | undefined {
         return this.tabs.find((tab) => tab.key === viewKey);
     }
 

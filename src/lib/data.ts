@@ -11,7 +11,6 @@ export interface Tab {
     key: string;
     label: string;
     maxWidth: string;
-    panelMaxWidth?: string;
 
     // Svelte transitions
     transition: {
@@ -20,13 +19,6 @@ export interface Tab {
         duration: number;
         delay: number;
         easing: 'cubicOut';
-    };
-
-    // Custom WAAPI transitions
-    viewTransition: {
-        transitionDuration: number;
-        transitionEasing: string;
-        clipExtraDuration?: number;
     };
 }
 
@@ -81,33 +73,23 @@ export const TABS: Tab[] = [
     {
         key: 'home',
         label: 'home',
-        maxWidth: 'max-w-md',
+        maxWidth: '28rem',
         transition: {
             x: -75,
             duration: 400,
             delay: 375,
             easing: 'cubicOut',
         },
-        viewTransition: {
-            transitionDuration: 500,
-            transitionEasing: 'cubic-bezier(0.33, 1, 0.68, 1)',
-        },
     },
     {
         key: 'portfolio',
         label: 'repos',
-        maxWidth: 'max-w-4xl',
+        maxWidth: '56rem',
         transition: {
             y: 150,
             duration: 400,
             delay: 375,
             easing: 'cubicOut',
-        },
-        viewTransition: {
-            transitionDuration: 500,
-            transitionEasing: 'cubic-bezier(0.33, 1, 0.68, 1)',
-            // Keep overflow clipped while staggered repo cards finish entering.
-            clipExtraDuration: REPO_SLUGS.length * PER_CARD_DELAY,
         },
     },
 ] as const;

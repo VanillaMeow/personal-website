@@ -14,7 +14,7 @@
 
     let loaded = $state(false);
     onMount(() => {
-        introState.complete = false;
+        introState.complete = true;
         let cancelled = false;
         let frame: number | undefined;
         const avatar = new Image();
@@ -47,6 +47,6 @@
     });
 </script>
 
-{#if loaded}
+<div style:display={loaded ? 'inline-block' : 'none'} class="w-full">
     <CardContent />
-{/if}
+</div>

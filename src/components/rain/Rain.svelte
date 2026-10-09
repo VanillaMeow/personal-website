@@ -148,7 +148,7 @@
 <style>
     canvas {
         opacity: 0;
-        transition: opacity 600ms ease-out;
+        transition: opacity 1000ms ease-in 200ms;
     }
 
     canvas.ready {
